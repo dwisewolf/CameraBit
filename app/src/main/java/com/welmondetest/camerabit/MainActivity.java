@@ -12,14 +12,21 @@ import android.media.Image;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity {
 ImageView cameraView;
+Button camera,gallery;
     private static final int CAMERA_REQUEST = 1888;
 
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
@@ -28,8 +35,10 @@ ImageView cameraView;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         cameraView =findViewById(R.id.cameraview);
+        camera =findViewById(R.id.camera);
+        gallery =findViewById(R.id.gallery);
 
-        cameraView.setOnClickListener(new View.OnClickListener() {
+        camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (checkSelfPermission(Manifest.permission.CAMERA)
@@ -78,8 +87,34 @@ ImageView cameraView;
             byte[] byteArray = byteArrayOutputStream .toByteArray();
             String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
 
-
+            uploadImage(encoded);
 
         }
+    }
+
+    private void uploadImage(String image){
+
+
+        String imageName ="imageName";
+        ApiInterface apiInterface = ApiClient.getApiClient().create(ApiInterface.class);
+        Call<Img_Pojo> call = apiInterface.uploadImage(imageName,image);
+
+        call.enqueue(new Callback<Img_Pojo>() {
+            @Override
+            public void onResponse(Call<Img_Pojo> call, Response<Img_Pojo> response) {
+
+                Img_Pojo img_pojo = response.body();
+
+                Toast.makeText(MainActivity.this,img_pojo.getResponse() , Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onFailure(Call<Img_Pojo> call, Throwable t) {
+
+                Toast.makeText(MainActivity.this,"Failure "+t.toString() , Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 }
